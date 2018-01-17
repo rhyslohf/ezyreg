@@ -59,16 +59,12 @@ class RESTHandler(tornado.web.RequestHandler):
             self.finish()
             
 def main():
-
-
-    ON_HEROKU = os.environ.get('ON_HEROKU')
-    port = 8888 if not ON_HEROKU else int(os.environ.get('PORT', 17995))
-
     application = tornado.web.Application([
         (r'/reg/(.*)', RESTHandler),
         (r"/(.*)", tornado.web.StaticFileHandler, {"path": '.', "default_filename": "index.html"})
     ])
     http_server = tornado.httpserver.HTTPServer(application)
+    port = int(os.environ.get("PORT", 5000))
     http_server.listen(port)
     tornado.ioloop.IOLoop.current().start()
 
