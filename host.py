@@ -8,6 +8,7 @@ import tornado.web
 import socket
 import json
 
+import os
 import sys
 from bs4 import BeautifulSoup
 import requests
@@ -58,12 +59,17 @@ class RESTHandler(tornado.web.RequestHandler):
             self.finish()
             
 def main():
+
+
+    ON_HEROKU = os.environ.get('ON_HEROKU')
+    port = 8888 if not ON_HEROKU else int(os.environ.get('PORT', 17995))
+
     application = tornado.web.Application([
         (r'/reg/(.*)', RESTHandler),
         (r"/(.*)", tornado.web.StaticFileHandler, {"path": '.', "default_filename": "index.html"})
     ])
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8888)
+    http_server.listen(port)
     tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":
