@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    
+    <title>EzyReg - Lookup</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.3/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.3/css/bootstrap-reboot.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.3/css/bootstrap-grid.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.3/js/bootstrap.min.js"></script>
+    
+<style>
+  
+</style>
+
+<body ng-app="application" ng-controller="controller" ng-cloak>
+
+    <div class="container">
+    
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">EzyReg - Lookup</h1>
+                <hr>
+            </div>
+        </div>
+        
+		<!-- input form -->
+		<div class="row justify-content-md-center">
+			<div class="col-sm-4 col-sm-12">
+                <form ng-submit="search()">
+				<div class="form-group">
+					<input class="form-control" placeholder="Input" ng-model="input" focus-me="{{true}}" style="text-transform:uppercase">
+				</div>
+                </form>
+			</div>
+		</div>
+		
+		<!-- result display -->
+		<div class="row justify-content-md-center">
+			<div class="col-md-6 col-sm-12">
+                <table class="table table-striped" ng-show="saved">
+                    <tr ng-repeat="(k,v) in result">
+                        <th>{{map(k)}}</th>
+                        <td>{{v.toUpperCase()}}</td>
+                    </tr>
+                </table>
+                
+                <div class="alert alert-info" role="alert" ng-show="searching">
+                    Searching...
+                </div>
+                
+                <div class="alert alert-danger" role="alert" ng-show="!searching && !saved && error">
+                    {{error}}
+                </div>
+                
+			</div>
+		</div>
+		
+		</div>
+    </div>
+
+    <script>
+        var application = angular.module('application', []);
+		
+        application.directive('focusMe', function($timeout) {
+            return {
+                scope: { trigger: '@focusMe' },
+                link: function(scope, element) {
+                    scope.$watch('trigger', function(value) {
+                        if(value === "true") { 
+                            $timeout(function() {
+                                element[0].focus(); 
+                            });
+                        }
+                    });
+                }
+            };
+        });
+
+		registrationService.$inject = ['$http', '$q'];
+        application.service('registrationService', registrationService);
+		function registrationService($http, $q) {
+			var s = {};
+			
+			s.getReg = function(reg) {
+                return $q(function(resolve, reject) {
+                    $http.get('/reg/'+reg).then(function(response) {
+                        if (!response || response.error) reject(response);
+                        else resolve(response.data);
+                    }, function(error) {
+                        reject(error);
+                    });
+                });
+			};
+			
+			return s;
+		};
+
+		
+		controller.$inject = ['$scope', '$http', '$window', 'registrationService'];
+        application.controller('controller', controller);
+		function controller($scope, $http, $window, registrationService) {
+			$scope.input = "s126beb";
+            
+            $scope.map = function(k) {
+                return {
+                    "ctp_insurer":"Insurer",
+                    "make":"Car Make",
+                    "vin":"Car VIN",
+                    "primary_colour":"Car Colour",
+                    "plate_number":"Plate Number",
+                    "plate_type":"Plate Type",
+                    "body_type":"Body Type",
+                    "expiry_date":"Expires"
+                }[k];
+            }
+            
+            $scope.$watch('input', function(oldValue, newValue) {
+                if ($scope.saved != $scope.input) {
+                    $scope.saved = undefined;
+                }
+            });
+            $scope.search = function() {
+                $scope.searching = true;
+                registrationService.getReg($scope.input).then(function(data) {
+                    $scope.searching = false;
+                    $scope.saved = $scope.input;
+                    $scope.result = data;
+                }, function(error) {
+                    $scope.searching = false;
+                    $scope.saved = undefined;
+                    $scope.error = "Error retrieving registration details for "+$scope.input;
+                });
+            };
+			
+		};
+		
+
+    </script>
+</body>
+
+</html>
